@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="https://i.ibb.co/3mNwdJWt/SP.png">
+  <link rel="apple-touch-icon" href="https://i.ibb.co/3mNwdJWt/SP.png"> <!-- Para iOS -->
+  <meta name="msapplication-TileImage" content="https://i.ibb.co/3mNwdJWt/SP.png"> <!-- Para Windows -->
+  <script src="https://cdn.jsdelivr.net/npm/jsQR/dist/jsQR.min.js"></script>
+
+  <style>
+    .suggestions {
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      background-color: white;
+      position: absolute;
+      width: 100%;
+      z-index: 1000;
+    }
+
+    .suggestions div {
+      padding: calc(8px + 0.5vw);
+      cursor: pointer;
+    }
+
+    .suggestions div:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* Estilos Globales */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+      color: #333333;
+      line-height: 1.4;
+      font-size: calc(18px + 1.2vw);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Contenedor Principal */
+    .container {
+      max-width: 100%;
+      width: 100%;
+      margin: 0 auto;
+      padding: calc(20px + 2vw);
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Títulos */
+    h1 {
+      text-align: center;
+      color: #006600;
+      margin-bottom: calc(20px + 2vw);
+      font-size: calc(32px + 2.5vw);
+    }
+
+    h2 {
+      text-align: center;
+      color: #006600;
+      margin-bottom: calc(20px + 2vw);
+      font-size: calc(28px + 2vw);
+    }
+
+    /* Encabezado con Imagen */
+    .header {
+      text-align: center;
+      margin-bottom: calc(20px + 2vw);
+      display: flex;
+      justify-content: center;
+    }
+
+    .header img {
+      max-width: 555px;
+      height: auto;
+      margin: 0 auto;
+    }
+
+    /* Campos del Formulario */
+    label {
+      display: block;
+      margin-top: calc(20px + 2vw);
+      font-size: calc(20px + 1.2vw);
+      font-weight: bold;
+      color: #006600;
+    }
+
+    label.required::after {
+      content: "*";
+      color: red;
+      margin-left: 5px;
+      font-size: 1.75rem;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      padding: calc(15px + 1.2vw);
+      margin-top: calc(10px + 1vw);
+      border: 2px solid #cccccc;
+      border-radius: 8px;
+      font-size: calc(18px + 1.2vw);
+    }
+
+    input[type="tel"]:focus,
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    textarea:focus,
+    select:focus {
+      border-color: #8DC63F; /* Verde claro */
+      outline: none;
+    }
+
+    /* Marcar campos inválidos */
+    input:invalid,
+    textarea:invalid,
+    select:invalid {
+      border-color: red; /* Borde rojo para campos inválidos */
+    }
+
+    /* Botón de Envío */
+    button {
+      display: block;
+      width: 100%;
+      padding: calc(20px + 1.2vw);
+      margin-top: calc(20px + 2vw);
+      background-color: #006600;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: calc(24px + 1.2vw);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #8DC63F; /* Verde claro */
+    }
+
+    /* Panel de estadísticas */
+    .stats-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      width: 160px;
+    }
+
+    .stat-box, .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px;
+      background: #ffffff;
+      border-radius: 8px;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .connection-status {
+      border: 1px solid #ccc;
+      margin-bottom: 4px;
+    }
+
+    .connection-status.online {
+      border-color: #28a745;
+      background-color: #f8fff8;
+    }
+
+    .connection-status.offline {
+      border-color: #ffc107;
+      background-color: #fffbf0;
+    }
+
+    .status-icon {
+      font-size: 16px;
+    }
+
+    .status-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-text.online {
+      color: #28a745;
+    }
+
+    .status-text.offline {
+      color: #856404;
+    }
+
+    .stat-icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      font-weight: bold;
+      color: #006600;
+      min-width: 24px;
+      text-align: right;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-left: auto;
+    }
+
+    /* Grupo de checkboxes más grandes */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: calc(20px + 2vw);
+      margin-top: calc(25px + 2vw);
+      padding: calc(20px + 2vw);
+      background: #f8f9fa;
+      border-radius: 15px;
+      justify-content: space-between;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: calc(15px + 1.5vw);
+      font-size: calc(18px + 1vw);
+      flex: 1 1 calc(50% - 2vw);
+      min-width: calc(50% - 2vw);
+      max-width: calc(50% - 2vw);
+      margin-top: 0;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+    }
+
+    .checkbox-group label:hover {
+      background-color: rgba(0, 102, 0, 0.05);
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      transform: scale(3.5);
+      margin: 0;
+      cursor: pointer;
+    }
+
+    /* Mensajes de Alerta */
+    .alert {
+      padding: calc(10px + 0.8vw);
+      margin-bottom: 1.5rem; /* Margen inferior más grande */
+      border-radius: 4px;
+      font-size: calc(14px + 0.8vw);
+      text-align: center;
+    }
+
+    .alert-success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    /* Campo de Evento Fijo */
+    .fixed-field {
+      background-color: #f0f0f0; /* Fondo gris claro */
+      cursor: not-allowed;
+      font-size: 1.75rem; /* Tamaño relativo grande */
+    }
+
+    /* Ocultar la casilla de Verticales */
+    #verticales-label,
+    #verticales {
+      display: none; /* Ocultar tanto la etiqueta como el campo */
+    }
+
+    /* Estilos para la versión */
+    .version-info {
+      text-align: center;
+      padding: calc(15px + 1.2vw);
+      margin-top: 40px;
+      color: #666;
+      font-size: calc(20px + 1vw);
+      font-family: monospace;
+    }
+
+    .version-info span {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(0,102,0,0.05);
+      border: 1px solid rgba(0,102,0,0.1);
+    }
+
+    .version-info .description {
+      display: block;
+      margin-top: 5px;
+      font-size: calc(20px + 1vw);
+      color: #888;
+      font-style: italic;
+    }
+
+    /* Estilos para la sección de integraciones */
+    .integration-info {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+
+    .integration-info h3 {
+      color: #006600;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: calc(20px + 1vw);
+    }
+
+    .integration-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .integration-item {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      min-width: 160px;
+    }
+
+    .integration-icon {
+      font-size: 24px;
+      margin-right: 10px;
+    }
+
+    .integration-name {
+      font-weight: bold;
+      font-size: calc(15px + 0.5vw);
+    }
+
+    .integration-note {
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+      color: #666;
+      font-size: calc(14px + 0.5vw);
+    }
+
+    @media screen and (max-width: 600px) {
+      .integration-info {
+        margin-top: 20px;
+        padding: 15px;
+      }
+
+      .integration-info h3 {
+        font-size: 18px;
+      }
+
+      .integration-list {
+        gap: 10px;
+      }
+
+      .integration-item {
+        min-width: calc(50% - 10px);
+        padding: 8px 10px;
+      }
+
+      .integration-icon {
+        font-size: 20px;
+      }
+
+      .integration-name {
+        font-size: 14px;
+      }
+
+      .integration-note {
+        font-size: 12px;
+      }
+    }
+
+    /* Media queries para móviles */
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 16px !important;
+      }
+
+      .container {
+        padding: 15px !important;
+      }
+
+      .header img {
+        max-width: 200px !important;
+        margin-bottom: 15px !important;
+      }
+
+      h1 {
+        font-size: 24px !important;
+        margin-bottom: 15px !important;
+      }
+
+      h2 {
+        font-size: 20px !important;
+        margin-bottom: 15px !important;
+      }
+
+      label {
+        font-size: 16px !important;
+        margin-top: 15px !important;
+      }
+
+      input[type="text"],
+      input[type="tel"],
+      input[type="email"],
+      textarea,
+      select {
+        font-size: 16px !important;
+        padding: 8px !important;
+        margin-top: 5px !important;
+        border-radius: 8px !important;
+        border-width: 1px !important;
+      }
+
+      select {
+        height: auto !important;
+        padding: 8px !important;
+      }
+
+      button {
+        font-size: 18px !important;
+        padding: 12px !important;
+        margin-top: 20px !important;
+        border-radius: 8px !important;
+      }
+
+      .checkbox-group {
+        padding: 10px !important;
+        gap: 10px !important;
+        border-radius: 8px !important;
+        margin-top: 15px !important;
+      }
+
+      .checkbox-group label {
+        font-size: 14px !important;
+        padding: 8px !important;
+        gap: 8px !important;
+        flex: 1 1 calc(50% - 5px) !important;
+        min-width: calc(50% - 5px) !important;
+        max-width: calc(50% - 5px) !important;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        transform: scale(1.5) !important;
+        margin-right: 5px !important;
+      }
+
+      .version-info {
+        font-size: 14px !important;
+        padding: 10px !important;
+        margin-top: 20px !important;
+      }
+
+      .version-info .description {
+        font-size: 12px !important;
+        margin-top: 5px !important;
+      }
+
+      .suggestions {
+        font-size: 14px !important;
+        max-height: 200px !important;
+      }
+
+      .suggestions div {
+        padding: 8px !important;
+      }
+
+      /* Ajustes para el mensaje de estado */
+      .alert {
+        font-size: 14px !important;
+        padding: 10px !important;
+        margin: 15px 0 !important;
+        border-radius: 8px !important;
+      }
+
+      /* Panel de estadísticas en móvil */
+      .stats-container {
+        position: static;
+        width: 100% !important;
+        margin: 20px auto 0;
+        padding: 10px !important;
+        flex-direction: row !important;
+        justify-content: space-around;
+        align-items: center;
+        gap: 10px !important;
+        border-top: 1px solid #eee;
+        box-shadow: none;
+        background: #fff;
+      }
+
+      .connection-status {
+        margin-bottom: 0 !important;
+        flex: 1;
+      }
+
+      .stat-box {
+        flex: 1;
+        text-align: center;
+      }
+
+      .stat-box, .connection-status {
+        padding: 5px !important;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .status-icon, .stat-icon {
+        font-size: 14px !important;
+      }
+
+      .status-text, .stat-value, .stat-label {
+        font-size: 12px !important;
+      }
+
+      /* Logs en móvil */
+      .logs-container {
+        font-size: 10px;
+        max-height: 40px;
+        padding: 2px 5px;
+      }
+
+      .logs-container .log-entry .timestamp {
+        font-size: 8px;
+      }
+
+      .logs-container .log-entry {
+        line-height: 1;
+        margin: 0;
+        padding: 1px;
+      }
+    }
+
+    /* Estilos para el contenedor de logs */
+    .logs-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-height: 60px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #00ff00;
+      font-family: monospace;
+      font-size: 11px;
+      overflow-y: auto;
+      padding: 2px 10px;
+      z-index: 1000;
+      border-top: 1px solid #00ff00;
+      backdrop-filter: blur(5px);
+    }
+
+    .logs-container .log-entry {
+      margin: 0;
+      padding: 1px 3px;
+      line-height: 1.1;
+    }
+
+    .logs-container .log-entry.success {
+      color: #00ff00;
+    }
+
+    .logs-container .log-entry.error {
+      color: #ff4444;
+    }
+
+    .logs-container .log-entry.warning {
+      color: #ffff00;
+    }
+
+    .logs-container .log-entry .timestamp {
+      color: #888;
+      margin-right: 6px;
+      font-size: 10px;
+    }
+
+    /* Ajuste para que el panel de estadísticas no se solape con los logs */
+    .stats-container {
+      bottom: 20px;
+    }
+
+    @media screen and (max-width: 600px) {
+      .logs-container {
+        font-size: 10px;
+        max-height: 50px;
+      }
+
+      .logs-container .log-entry .timestamp {
+        font-size: 9px;
+      }
+
+      .stats-container {
+        bottom: 20px;
+      }
+    }
+
+    /* Estilos para validación de teléfono */
+    .phone-valid {
+      border-color: #28a745 !important;
+      background-color: #f8fff9 !important;
+    }
+
+    .phone-invalid {
+      border-color: #dc3545 !important;
+      background-color: #fff8f8 !important;
+    }
+  </style>
+
+  </head>
+<body>
+  <div class="container">
+    <!-- Encabezado con Imagen -->
+    <div class="header">
+      <img src="https://i.ibb.co/LDwwK2h0/Service-Plus-Icon.png" alt="Encabezado Service Plus">
+    </div>
+
+    <h1>Registro de visitas</h1>
+    <h2><i>RegistroExpoWEB</i></h2>    <form id="prospectForm">
+      <input type="hidden" id="telefonoComercial" name="telefonoComercial">
+      <input type="hidden" id="mailComercial" name="mailComercial">
+      <input type="hidden" id="empresa" name="empresa">
+      <input type="hidden" id="bitrixId" name="bitrixId">
+      <input type="hidden" id="selectedCheckboxes" name="selectedCheckboxes">
+      <input type="hidden" id="pais" name="pais">
+      
+
+      <label for="apellido">Apellido:</label>
+      <input type="text" id="apellido" name="apellido" required placeholder="Apellido del visitante">
+
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" name="nombre" required placeholder="Nombre del visitante">
+
+      <label for="localidad">Localidad:</label>
+      <input type="text" id="localidad" name="localidad" required placeholder="Ingrese localidad del visitante">
+      <div id="suggestions" class="suggestions"></div>
+
+      <label for="provincia">Provincia:</label>
+      <input type="text" id="provincia" name="provincia" required>
+
+      <label for="telefono">Teléfono:</label>
+      <input type="tel" id="telefono" name="telefono" required placeholder="Argentina: 10 dígitos (sin +549) | Paraguay: min 9 dígitos (sin +595) | Uruguay: min 8 dígitos (sin +598)">
+
+      <label for="mail">Mail:</label>
+      <input type="email" id="mail" name="mail" placeholder="Ingrese correo electrónico del visitante">
+
+      <label for="verticales"></label>
+      <input type="text" id="verticales" name="verticales" hidden>
+
+      <label for="comentarios">Comentarios:</label>
+      <textarea id="comentarios" name="comentarios" required placeholder="Comentarios sobre lo hablado con el visitante: tamaño de máqiuna, surcos, metros de botalón, etc."></textarea>
+
+      <label for="montoEstimado">Monto Estimado:</label>
+      <input type="text" id="montoEstimado" name="montoEstimado">
+
+      <label for="presupuesto"></label>
+      <input type="text" id="presupuesto" name="presupuesto" hidden>
+
+      <label for="operadorApp">Atendido por:</label>
+      <input type="text" id="operadorApp" name="operadorApp" required placeholder="Ponga aquí nombre su nombre">
+
+      <label for="empresaOperador">Empresa del Registrador:</label>
+      <input type="text" id="empresaOperador" name="empresaOperador" required placeholder="A qué empresa pertenece el registrador">
+
+      <label for="comercialAsignado">Nombre del Comercial Asignado:</label>
+      <select id="comercialAsignado" name="comercialAsignado">
+          <option value="">Selecciona un comercial</option>
+          <option value="Adilson Simch" data-phone="595983516534" data-mail="asimch@agrionixsa.com" data-empresa="Agrionix S.A." data-bitrix-id="532">Adilson Simch</option>
+          <option value="Adrián Cardinali" data-phone="595983362530" data-mail="acardinali@agrionixsa.com" data-empresa="Agrionix S.A." data-bitrix-id="464">Adrián Cardinali</option>
+          <option value="Ailín Borracci" data-phone="5491127072016" data-mail="aborracci@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1755">Ailín Borracci</option>
+          <option value="Andrés Hernández" data-phone="59898869915" data-mail="ahernandez@siso.uy" data-empresa="SISO S.A." data-bitrix-id="1141">Andrés Hernández</option>
+          <option value="Camila Gorosito" data-phone="5491136059058" data-mail="cgorosito@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6869">Camila Gorosito</option>
+          <option value="Carlos Bermúdez" data-phone="5493813015861" data-mail="cbermudez@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="486">Carlos Bermúdez</option>
+          <option value="César Vigna" data-phone="5493472586045" data-mail="cvigna@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="8">César Vigna</option>
+          <option value="Delfina Aguirre" data-phone="5491133176971" data-mail="daguirre@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="31">Delfina Aguirre</option>
+          <option value="Facundo Pagani" data-phone="5491168132098" data-mail="fpagani@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="308">Facundo Pagani</option>
+          <option value="Fernanda Frade" data-phone="5492494007543" data-mail="ffrade@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6855">Fernanda Frade</option>
+          <option value="Germán González" data-phone="5493582403733" data-mail="ggonzalez@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6">Germán González</option>
+          <option value="Ignacio D'auria" data-phone="5491138051103" data-mail="idauria@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="35">Ignacio Dauria</option>
+          <option value="Ignacio Espinoza" data-phone="5493516174909" data-mail="iespinoza@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="54">Ignacio Espinoza</option>
+          <option value="Joaquín Fernández" data-phone="5492364362432" data-mail="jfernandez@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="58">Joaquín Fernández</option>
+          <option value="Jorgelina Wihlelm" data-phone="5493435264854" data-mail="jwihlelm@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="4400">Jorgelina Wihlelm</option>
+          <option value="Jose Cesanelli" data-phone="5493472508041" data-mail="jcesanelli@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="2800">Jose Cesanelli</option>
+          <option value="Juan Manuel Silva" data-phone="5493472545342" data-mail="jsilva@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1019">Juan Manuel Silva</option>
+          <option value="Juan Martín Venencia" data-phone="5493446560856" data-mail="jvenencia@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="28">Juan Martín Venencia</option>
+          <option value="Luis Adrover" data-phone="5491150032770" data-mail="ladrover@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1">Luis Adrover</option>
+          <option value="Lucas Morichetti" data-phone="5493584185793" data-mail="lmorichetti@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="33">Lucas Morichetti</option>
+          <option value="Martín Aused" data-phone="5493472545329" data-mail="maused@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1017">Martín Aused</option>
+          <option value="Matías Aliaga" data-phone="5492983409030" data-mail="maliaga@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="12">Matías Aliaga</option>
+          <option value="Matías Corradi" data-phone="5491140228150" data-mail="mcorradi@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1379">Matías Corradi</option>
+          <option value="Matías García" data-phone="5491138051103" data-mail="mgarcia@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1413">Matías García</option>
+          <option value="Matías Koller" data-phone="5491126603601" data-mail="mkoller@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1385">Matías Koller</option>
+          <option value="Nicolás Scaramuzza" data-phone="5493472640347" data-mail="nscaramuzza@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6867">Nicolás Scaramuzza</option>
+          <option value="Pablo Casas" data-phone="5493472508703" data-mail="pcasas@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6871">Pablo Casas</option>
+          <option value="Paulo Castillo" data-phone="595982383700" data-mail="pcastillo@agrionixsa.com" data-empresa="Agrionix S.A." data-bitrix-id="492">Paulo Castillo</option>
+          <option value="Ramiro Fernández" data-phone="5493472501871" data-mail="rfernandez@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="16">Ramiro Fernández</option>
+          <option value="Raul Chebaia" data-phone="54933813598742" data-mail="rchebaia@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="5400">Raúl Chebaia</option>
+          <option value="Renzo Bonavia" data-phone="5493472593132" data-mail="rbonavia@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="1269">Renzo Bonavia</option>
+          <option value="Ricardo Vicentín" data-phone="5493731446919" data-mail="rvicentin@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="6863">Ricardo Vicentín</option>
+          <option value="Roberto Catala" data-phone="5493472551188" data-mail="rcatala@dyesa.com" data-empresa="DyE S.A." data-bitrix-id="20">Roberto Catala</option>
+          <option value="Adriana Berardinelli" data-phone="5493815758669" data-mail="adriana.berardinelli31@gmail.com" data-empresa="KAMPU SRL" data-bitrix-id="1343">Adriana Berardinelli</option>
+          <option value="Cecilia Gómez" data-phone="5493816224166" data-mail="siembraycosechatv@gmail.com" data-empresa="KAMPU SRL" data-bitrix-id="1343">Cecilia Gómez</option>
+          <option value="Claudio Báez" data-phone="5491157378417" data-mail="baezclaudio26@gmail.com" data-empresa="C.B." data-bitrix-id="484">Claudio Báez</option>
+          <option value="Gonzalo Ortiz" data-phone="5492355446832" data-mail="bya.agtech@gmail.com" data-empresa="Heralco" data-bitrix-id="1383">Gonzalo Ortiz</option>
+          <option value="Jeronimo Sfascia" data-phone="5492262477100" data-mail="agrodieselnecochea@gmail.com" data-empresa="AgroDiesel" data-bitrix-id="1471">Jeronimo Sfascia</option>
+          <option value="Jorge Álvarez" data-phone="5492302518510" data-mail="alvarezjorge68@hotmail.com" data-empresa="Tecnoagro" data-bitrix-id="1021">Jorge Álvarez</option>
+          <option value="Jorge Salguero" data-phone="5493877532972" data-mail="salgueroant@gmail.com" data-empresa="ECIN SRL " data-bitrix-id="568">Jorge Salguero</option>
+          <option value="Juan Del Cerro" data-phone="5493874145186" data-mail="jvlb.agro@gmail.com" data-empresa="JVLB" data-bitrix-id="1387">Juan Del Cerro</option>
+          <option value="Juan Martín Oliver" data-phone="5493446235400" data-mail="jmoliver.lucaspreisz@gmail.com" data-empresa="Lucas Preisz" data-bitrix-id="1469">Juan Martín Oliver</option>
+          <option value="Manuel Pacheco" data-phone="5492392563100" data-mail="manuelpacheco@heralcosrl.com" data-empresa="Heralco" data-bitrix-id="1405">Manuel Pacheco</option>
+          <option value="Marcelo Rosenthal" data-phone="5492364526901" data-mail="cdjuninmventas@gmail.com" data-empresa="CD Junin" data-bitrix-id="1393">Marcelo Rosenthal</option>
+          <option value="Maximiliano Arduini" data-phone="5492326494729" data-mail="maximilianoarduini@gmail.com" data-empresa="Maximiliano Arduini" data-bitrix-id="1373">Maximiliano Arduini</option>
+          <option value="Miguel Ricchiardi" data-phone="5493874877464" data-mail="miguelangelricchiardi@gmail.com" data-empresa="ECIN SRL " data-bitrix-id="568">Miguel Ricchiardi</option>
+          <option value="Pablo Puy" data-phone="5493812380460" data-mail="pablopuy1221@gmail.com" data-empresa="KAMPU SRL" data-bitrix-id="1343">Pablo Puy</option>
+          <option value="Pedro Alcorta" data-phone="5492392519731" data-mail="palcort@yahoo.com" data-empresa="Heralco" data-bitrix-id="474">Pedro Alcorta</option>
+          <option value="Sebastian Schroh" data-phone="5493388416365" data-mail="sebaschroh@gmail.com" data-empresa="Heralco" data-bitrix-id="1467">Sebastian Schroh</option>
+      </select>
+
+      <div class="checkbox-group">
+        <label><input type="checkbox" name="weedSeeker"> WeedSeeker</label>
+        <label><input type="checkbox" name="solucionSiembra"> Solución Siembra</label>
+        <label><input type="checkbox" name="solucionPulverizacion"> Solución Pulverización</label>
+        <label><input type="checkbox" name="postVenta"> Asignado a PostVenta</label>
+        <label><input type="checkbox" name="dronesDJI"> Drones DJI</label>
+        <label><input type="checkbox" name="guiaAutoguia"> Guía y Autoguía</label>
+        <label><input type="checkbox" name="tapsSenales"> TAPs - Señales</label>
+        <label><input type="checkbox" name="accionQR"> Acción QR</label>
+      </div>
+
+      <label for="evento">Evento:</label>
+      <input type="text" id="evento" name="evento" value="Agroactiva 2025">
+
+      <button type="submit">Enviar</button>
+      <p id="statusMessage"></p>
+    </form>
+
+    <!-- Panel flotante con estadísticas -->
+    <div id="form-stats" class="stats-container">
+      <!-- Indicador de conexión -->
+      <div id="connection-status" class="connection-status offline">
+        <i class="status-icon">📡</i>
+        <span id="status-text" class="status-text offline">Fuera de línea</span>
+      </div>
+      <div class="stat-box">
+        <i class="stat-icon">📨</i>
+        <span class="stat-value" id="forms-sent">0</span>
+        <span class="stat-label">Enviados</span>
+      </div>
+      <div class="stat-box">
+        <i class="stat-icon">⏳</i>
+        <span class="stat-value" id="forms-pending">0</span>
+        <span class="stat-label">Pendientes</span>
+      </div>
+    </div>
+
+    <!-- Información de integraciones activas -->
+    <div class="integration-info">
+      <h3>Integraciones activas</h3>
+      <div class="integration-list">
+        <div class="integration-item">
+          <span class="integration-icon">📊</span>
+          <span class="integration-name">Google Forms</span>
+        </div>
+        <div class="integration-item">
+          <span class="integration-icon">🔄</span>
+          <span class="integration-name">Bitrix24 CRM</span>
+        </div>
+        <div class="integration-item">
+          <span class="integration-icon">💬</span>
+          <span class="integration-name">WazzUp</span>
+        </div>
+        <div class="integration-item">
+          <span class="integration-icon">🚀</span>
+          <span class="integration-name">Odoo CRM</span>
+        </div>
+      </div>
+      <p class="integration-note">Los datos del formulario se sincronizarán con todos los sistemas automáticamente</p>
+    </div>
+
+  </div>
+
+
+  <!-- Información de versión -->
+  <div class="version-info">
+    <span id="version-number">Cargando...</span>
+    <span class="description" id="version-description"></span>
+  </div>
+
+  <!-- Contenedor de logs -->
+  <!-- Eliminado el div de logs -->
+
+  <script>
+    // Variables globales actualizadas
+    const CONFIG = {
+      MAX_STORED_FORMS: 300,
+      SYNC_INTERVAL: 300000, // 300 segundos
+      RETRY_LIMIT: 300,
+      FORM_EXPIRY_DAYS: 7
+    };
+
+    let offlineStorage = {
+      init() {
+        try {
+          // Solicitar almacenamiento persistente
+          if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().then(isPersisted => {
+              console.log(`Almacenamiento persistente ${isPersisted ? 'concedido' : 'denegado'}`);
+            });
+          }
+
+          // Inicializar almacenamiento
+          const stored = localStorage.getItem('offlineForms');
+          if (stored) {
+            this.forms = JSON.parse(stored);
+            this.cleanExpiredForms();
+          } else {
+            this.forms = [];
+          }
+          
+          // Configurar sincronización automática
+          window.addEventListener('online', () => this.syncForms());
+          setInterval(() => {
+            if (navigator.onLine) this.syncForms();
+          }, CONFIG.SYNC_INTERVAL);
+
+        } catch (error) {
+          console.error('Error inicializando almacenamiento:', error);
+          this.forms = [];
+        }
+      },      async saveForm(formData) {
+        try {
+          // Limpiar formularios antiguos si es necesario
+          this.cleanExpiredForms();
+
+          // Verificar límite de almacenamiento
+          if (this.forms.length >= CONFIG.MAX_STORED_FORMS) {
+            // Eliminar el formulario más antiguo
+            this.forms.shift();
+          }
+
+          // Agregar nuevo formulario
+          const newForm = {
+            ...formData,
+            id: Date.now(),
+            timestamp: new Date().toISOString(),
+            retryCount: 0,
+            status: 'pending',
+            destinations: formData.destinations || { // Preservar destinos existentes o inicializar
+              forms: false,
+              bitrix: false,
+              wazzup: false,
+              odoo: false
+            }
+          };
+
+          // Log para debugging
+          console.log('Guardando formulario con destinos:', newForm.destinations);
+
+          this.forms.push(newForm);
+          await this.persistForms();
+          
+          // Actualizar estadísticas
+          stats.pending = this.forms.length;
+          updateStats();
+
+          return true;
+        } catch (error) {
+          console.error('Error guardando formulario:', error);
+          return false;
+        }
+      },      async syncForms() {
+        if (!navigator.onLine || this.forms.length === 0) return;
+
+        console.log(`Iniciando sincronización de ${this.forms.length} formularios`);
+        showAlert(`Sincronizando ${this.forms.length} formularios...`, "warning");
+
+        for (let i = this.forms.length - 1; i >= 0; i--) {
+          const form = this.forms[i];
+          
+          if (form.status === 'synced') continue;
+          
+          try {
+            const result = await this.sendForm(form);
+            
+            if (result && result.length > 0) {
+              const formResult = result[0]; // Tomar el primer resultado (solo enviamos un formulario)
+              
+              // Actualizar el estado de destinos en el formulario local
+              if (formResult.destinations) {
+                form.destinations = { ...form.destinations, ...formResult.destinations };
+              }
+              
+              // Log detallado del resultado
+              console.log(`Resultado para formulario ${form.id}:`, formResult);
+              console.log(`Destinos actuales:`, form.destinations);
+              
+              if (formResult.success) {
+                // Formulario completamente exitoso
+                form.status = 'synced';
+                stats.sent++;
+                stats.pending--;
+                this.forms.splice(i, 1);
+                await this.persistForms();
+                updateStats();
+                showAlert(`Formulario sincronizado correctamente`, "success");
+              } else {
+                // Algunos destinos fallaron, pero preservamos los exitosos
+                form.retryCount = (form.retryCount || 0) + 1;
+                
+                // Verificar si todos los destinos están completos
+                const allDestinationsComplete = form.destinations && 
+                  form.destinations.forms && 
+                  form.destinations.bitrix && 
+                  form.destinations.wazzup && 
+                  form.destinations.odoo;
+                
+                if (allDestinationsComplete) {
+                  // Todos los destinos están completos, marcar como sincronizado
+                  form.status = 'synced';
+                  stats.sent++;
+                  stats.pending--;
+                  this.forms.splice(i, 1);
+                  showAlert(`Formulario sincronizado completamente`, "success");
+                } else if (form.retryCount >= CONFIG.RETRY_LIMIT) {
+                  // Alcanzó el límite de reintentos
+                  this.forms.splice(i, 1);
+                  stats.pending--;
+                  updateStats();
+                  showAlert(`Formulario descartado después de ${CONFIG.RETRY_LIMIT} intentos. Algunos destinos pueden haber fallado.`, "warning");
+                } else {
+                  // Continuar intentando en el próximo ciclo
+                  const failedDestinations = [];
+                  if (!form.destinations?.forms) failedDestinations.push('Google Forms');
+                  if (!form.destinations?.bitrix) failedDestinations.push('Bitrix24');
+                  if (!form.destinations?.wazzup) failedDestinations.push('WhatsApp');
+                  if (!form.destinations?.odoo) failedDestinations.push('Odoo');
+                  
+                  showAlert(`Reintentando formulario. Pendientes: ${failedDestinations.join(', ')}`, "warning");
+                }
+                
+                await this.persistForms();
+              }
+            } else {
+              throw new Error("Respuesta inválida del servidor");
+            }
+          } catch (error) {
+            console.error('Error sincronizando formulario:', error);
+            form.retryCount = (form.retryCount || 0) + 1;
+            
+            if (form.retryCount >= CONFIG.RETRY_LIMIT) {
+              this.forms.splice(i, 1);
+              stats.pending--;
+              updateStats();
+              showAlert(`Formulario descartado por errores de conexión`, "warning");
+            }
+            
+            await this.persistForms();
+          }
+
+          // Esperar 3 segundos entre envíos
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+      },
+
+      async sendForm(formData) {
+        return new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(result => resolve(result))
+            .withFailureHandler(error => reject(error))
+            .processOfflineData([formData]);
+        });
+      },
+
+      cleanExpiredForms() {
+        const now = new Date();
+        this.forms = this.forms.filter(form => {
+          const formDate = new Date(form.timestamp);
+          const daysDiff = (now - formDate) / (1000 * 60 * 60 * 24);
+          return daysDiff <= CONFIG.FORM_EXPIRY_DAYS;
+        });
+        this.persistForms();
+      },
+
+      async persistForms() {
+        try {
+          localStorage.setItem('offlineForms', JSON.stringify(this.forms));
+        } catch (error) {
+          if (error.name === 'QuotaExceededError') {
+            // Si se excede la cuota, eliminar los formularios más antiguos
+            while (this.forms.length > 0) {
+              this.forms.shift();
+              try {
+                localStorage.setItem('offlineForms', JSON.stringify(this.forms));
+                break;
+              } catch (e) {
+                continue;
+              }
+            }
+          }
+          console.error('Error persistiendo formularios:', error);
+        }
+      },
+
+      forms: []
+    };
+
+    // Variables globales
+    let form, operadorApp, empresaOperador, checkboxes;
+    let stats = {
+      sent: 0,
+      pending: 0
+    };
+    let isOfflineMode = false;
+    let lastDataUpdate = null;
+    const MAX_PENDING_FORMS = 100; // Límite máximo de formularios pendientes
+    let pendingForms = []; // Inicialización del array de formularios pendientes
+
+    // Función para inicializar los formularios pendientes
+    function initPendingForms() {
+      try {
+        const storedForms = localStorage.getItem('pendingForms');
+        if (storedForms) {
+          pendingForms = JSON.parse(storedForms);
+          // Limpiar formularios antiguos si se excede el límite
+          if (pendingForms.length > MAX_PENDING_FORMS) {
+            pendingForms = pendingForms.slice(-MAX_PENDING_FORMS);
+            localStorage.setItem('pendingForms', JSON.stringify(pendingForms));
+          }
+          stats.pending = pendingForms.length;
+          updateStats();
+        }
+      } catch (error) {
+        console.error('Error al cargar formularios pendientes:', error);
+        pendingForms = [];
+      }
+    }
+
+    // Función para mostrar alertas
+    function showAlert(message, type) {
+      const statusMessage = document.getElementById("statusMessage");
+      statusMessage.textContent = message;
+      statusMessage.className = `alert alert-${type}`;
+      console.log(`[${type.toUpperCase()}] ${message}`); // Mantenemos el log en consola para debugging
+    }
+
+    // Inicialización cuando el DOM está listo
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('Iniciando aplicación...');
+      
+      // Referencias a elementos del DOM
+      form = document.getElementById("prospectForm");
+      operadorApp = document.getElementById("operadorApp");
+      empresaOperador = document.getElementById("empresaOperador");
+      checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+      
+      // Cargar valores guardados del operador
+      const savedOperador = localStorage.getItem('operadorApp');
+      const savedEmpresa = localStorage.getItem('empresaOperador');
+      if (savedOperador) operadorApp.value = savedOperador;
+      if (savedEmpresa) empresaOperador.value = savedEmpresa;
+
+      // Inicializar estadísticas
+      const savedStats = localStorage.getItem('formStats');
+      if (savedStats) {
+        stats = JSON.parse(savedStats);
+      } else {
+        stats = {
+          sent: 0,
+          pending: 0
+        };
+      }
+
+      // Inicializar formularios pendientes
+      initPendingForms();
+
+      // Inicializar almacenamiento offline
+      offlineStorage.init();
+
+      // Configurar event listeners
+      if (form) {
+        form.addEventListener("submit", handleSubmit);
+      }
+
+      // Event listener para el campo de localidad
+      const localidadInput = document.getElementById("localidad");
+      if (localidadInput) {
+        localidadInput.addEventListener("input", (e) => {
+          showSuggestions(e.target.value);
+        });
+      }      // Event listener para el comercial asignado
+      const comercialSelect = document.getElementById("comercialAsignado");
+      if (comercialSelect) {
+        comercialSelect.addEventListener("change", (e) => {
+          updateComercialData(e.target.value);
+        });
+      }
+
+      // Event listener para validación en tiempo real del teléfono
+      const telefonoInput = document.getElementById("telefono");
+      if (telefonoInput) {
+        telefonoInput.addEventListener("input", (e) => {
+          validatePhoneRealTime();
+        });
+      }
+
+      // Event listeners para guardar valores del operador
+      operadorApp.addEventListener('change', (e) => {
+        localStorage.setItem('operadorApp', e.target.value);
+      });
+
+      empresaOperador.addEventListener('change', (e) => {
+        localStorage.setItem('empresaOperador', e.target.value);
+      });
+
+      // Iniciar verificación periódica de conexión
+      setInterval(checkConnectionAndSync, 30000);
+
+      // Cargar datos iniciales sin bloquear la interfaz
+      loadInitialData().catch(error => {
+        console.error('Error en carga inicial:', error);
+        showAlert("Error en carga inicial, continuando en modo offline", "warning");
+      });
+    });
+
+    // Función para cargar datos iniciales
+    async function loadInitialData() {
+      try {
+        console.log('Verificando necesidad de actualización de datos...'); 
+
+        // Cargar datos almacenados en caché primero
+        const localidadesData = localStorage.getItem('localidadesData');
+        if (localidadesData) {
+          console.log('Usando datos de localidades almacenados en caché'); 
+          window.localidadesData = JSON.parse(localidadesData);
+        }
+
+        // Intentar obtener el estado del servidor
+        try {
+          const serverStatus = await new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .checkServerStatus();
+          });
+
+          // Actualizar información de versión si hay conexión
+          if (serverStatus) {
+            document.getElementById('version-number').textContent = serverStatus.version || 'No disponible';
+            document.getElementById('version-description').textContent = serverStatus.description || '';
+            
+            // Verificar si necesitamos actualizar los datos (una vez al día)
+            const now = new Date();
+            const lastUpdate = localStorage.getItem('lastDataUpdate');
+
+            if (!lastUpdate || !localidadesData || isNewDay(new Date(lastUpdate), now)) {
+              console.log('Actualizando datos de localidades desde el servidor...'); 
+              
+              if (serverStatus.isOnline) {
+                console.log('Servidor en línea, descargando datos...'); 
+                // Cargar datos de localidades
+                const localidades = await new Promise((resolve, reject) => {
+                  google.script.run
+                    .withSuccessHandler(resolve)
+                    .withFailureHandler(reject)
+                    .getLocalidadesData();
+                });
+
+                if (localidades && localidades.length > 0) {
+                  // Guardar datos en localStorage
+                  localStorage.setItem('localidadesData', JSON.stringify(localidades));
+                  localStorage.setItem('lastDataUpdate', now.toISOString());
+                  window.localidadesData = localidades;
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.log('Error al conectar con el servidor, continuando en modo offline');
+          document.getElementById('version-number').textContent = 'Modo Offline';
+          document.getElementById('version-description').textContent = 'Trabajando sin conexión';
+          isOfflineMode = true;
+          
+          // Actualizar UI para modo offline
+          const statusContainer = document.getElementById("connection-status");
+          const statusText = document.getElementById("status-text");
+          const statusIcon = statusContainer.querySelector(".status-icon");
+          
+          statusContainer.classList.remove('online');
+          statusContainer.classList.add('offline');
+          statusText.textContent = "Fuera de línea";
+          statusText.classList.remove('online');
+          statusText.classList.add('offline');
+          statusIcon.textContent = "📡";
+        }
+
+      } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+        showAlert("Error al cargar datos iniciales, continuando en modo offline", "warning");
+        document.getElementById('version-number').textContent = 'Modo Offline';
+      }
+    }
+
+    // Función para verificar si es un nuevo día
+    function isNewDay(lastUpdate, now) {
+      return lastUpdate.getDate() !== now.getDate() ||
+             lastUpdate.getMonth() !== now.getMonth() ||
+             lastUpdate.getFullYear() !== now.getFullYear();
+    }
+
+    // Función para verificar conexión y sincronizar
+    async function checkConnectionAndSync() {
+      try {
+        console.log('Verificando estado de conexión...'); // Log en consola para debugging
+        const serverStatus = await new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(resolve)
+            .withFailureHandler(reject)
+            .checkServerStatus();
+        });
+
+        const statusContainer = document.getElementById("connection-status");
+        const statusText = document.getElementById("status-text");
+        const statusIcon = statusContainer.querySelector(".status-icon");
+
+        if (serverStatus && serverStatus.isOnline) {
+          console.log('Conexión establecida con el servidor'); // Log en consola para debugging
+          statusContainer.classList.remove('offline');
+          statusContainer.classList.add('online');
+          statusText.textContent = "En línea";
+          statusText.classList.remove('offline');
+          statusText.classList.add('online');
+          statusIcon.textContent = "📶"; // Icono de señal fuerte
+          isOfflineMode = false;
+        } else {
+          console.log('No se pudo establecer conexión con el servidor'); // Log en consola para debugging
+          statusContainer.classList.remove('online');
+          statusContainer.classList.add('offline');
+          statusText.textContent = "Fuera de línea";
+          statusText.classList.remove('online');
+          statusText.classList.add('offline');
+          statusIcon.textContent = "📡"; // Icono de antena
+          isOfflineMode = true;
+        }
+      } catch (error) {
+        console.error('Error al verificar conexión:', error);
+        const statusContainer = document.getElementById("connection-status");
+        const statusText = document.getElementById("status-text");
+        const statusIcon = statusContainer.querySelector(".status-icon");
+        
+        statusContainer.classList.remove('online');
+        statusContainer.classList.add('offline');
+        statusText.textContent = "Error de conexión";
+        statusText.classList.remove('online');
+        statusText.classList.add('offline');
+        statusIcon.textContent = "⚠️"; // Icono de advertencia
+        isOfflineMode = true;
+      }
+    }
+
+    // Función para obtener los checkboxes seleccionados
+    function getSelectedCheckboxes() {
+      const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
+      const selected = [];
+      const selectedData = {};
+      
+      checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+          selected.push(checkbox.name);
+          selectedData[checkbox.name] = true;
+        } else {
+          selectedData[checkbox.name] = false;
+        }
+      });
+
+      const concatenatedString = selected.join(", ");
+      document.getElementById("verticales").value = concatenatedString;
+      
+      return {
+        concatenated: concatenatedString,
+        data: selectedData
+      };
+    }
+
+    // Función para mostrar sugerencias de localidades
+    function showSuggestions(inputValue) {
+      if (!inputValue) {
+        document.getElementById("suggestions").style.display = "none";
+        return;
+      }
+
+      console.log(`Buscando sugerencias para: ${inputValue}`); // Log en consola para debugging
+      const localData = window.localidadesData || [];
+      
+      const filteredLocalidades = localData.filter((item) =>
+        item.Municipio.toLowerCase().includes(inputValue.toLowerCase())
+      );
+
+      if (filteredLocalidades.length > 0) {
+        console.log(`Se encontraron ${filteredLocalidades.length} sugerencias`); // Log en consola para debugging
+        const suggestionsDiv = document.getElementById("suggestions");
+        suggestionsDiv.innerHTML = "";
+
+        filteredLocalidades.forEach((item) => {
+          const suggestion = document.createElement("div");
+          suggestion.textContent = `${item.Municipio} (${item.Provincia})`;          suggestion.onclick = () => {
+            document.getElementById("localidad").value = item.Municipio;
+            document.getElementById("provincia").value = item.Provincia;
+            document.getElementById("pais").value = item.Pais; // Capturar el país desde el CSV
+            suggestionsDiv.style.display = "none";
+            
+            // Actualizar placeholder y validación de teléfono según el país
+            updatePhonePlaceholder();
+            
+            // Asignar comercial basado en la regional
+            asignarComercialPorRegional(item.Regional);
+          };
+          suggestionsDiv.appendChild(suggestion);
+        });
+        suggestionsDiv.style.display = "block";
+      } else {
+        console.log('No se encontraron sugerencias'); // Log en consola para debugging
+        document.getElementById("suggestions").style.display = "none";
+      }
+    }
+
+    // Función para asignar comercial según la regional
+    function asignarComercialPorRegional(regional) {
+      if (!regional) {
+        console.log('No se encontró información de la regional'); // Log en consola para debugging
+        showAlert("No se encontró información de la regional para esta localidad", "warning");
+        return;
+      }
+
+      console.log(`Buscando comercial para la regional: ${regional}`); // Log en consola para debugging
+      const comercialSelect = document.getElementById("comercialAsignado");
+      const comerciales = Array.from(comercialSelect.options);
+      
+      const comercialOption = comerciales.find(option => 
+        option.value && option.value.trim() === regional.trim()
+      );
+
+      if (comercialOption) {
+        console.log(`Comercial encontrado: ${comercialOption.value}`); // Log en consola para debugging
+        comercialSelect.value = comercialOption.value;
+        updateComercialData(comercialOption.value);
+        showAlert(`Comercial asignado automáticamente: ${comercialOption.value}`, "success");
+      } else {
+        console.log('No se encontró un comercial para esta regional'); // Log en consola para debugging
+        showAlert("No se encontró un comercial para esta regional. Por favor, seleccione uno manualmente.", "warning");
+      }
+    }
+
+    // Función para actualizar datos del comercial
+    function updateComercialData(comercialValue) {
+      console.log(`Actualizando datos del comercial: ${comercialValue}`); // Log en consola para debugging
+      const comercialSelect = document.getElementById("comercialAsignado");
+      const selectedOption = Array.from(comercialSelect.options).find(
+        option => option.value === comercialValue
+      );
+
+      if (selectedOption) {
+        document.getElementById("telefonoComercial").value = selectedOption.getAttribute("data-phone") || "";
+        document.getElementById("mailComercial").value = selectedOption.getAttribute("data-mail") || "";
+        document.getElementById("empresa").value = selectedOption.getAttribute("data-empresa") || "";
+        document.getElementById("bitrixId").value = selectedOption.getAttribute("data-bitrix-id") || "";
+        console.log('Datos del comercial actualizados correctamente'); // Log en consola para debugging
+      } else {
+        console.log('No se encontraron datos para el comercial seleccionado'); // Log en consola para debugging
+      }
+    }
+
+    // Función para actualizar estadísticas
+    function updateStats() {
+      document.getElementById("forms-sent").textContent = stats.sent;
+      document.getElementById("forms-pending").textContent = stats.pending;
+      localStorage.setItem("formStats", JSON.stringify(stats));
+      console.log(`Estadísticas actualizadas - Enviados: ${stats.sent}, Pendientes: ${stats.pending}`); // Log en consola para debugging
+    }
+
+    // Modificar handleSubmit para usar el nuevo sistema
+    async function handleSubmit(e) {
+      e.preventDefault();
+      console.log('Iniciando envío de formulario...'); 
+
+      // Obtener estados de los checkboxes
+      const checkboxStates = getSelectedCheckboxes();
+      
+      // Validar que al menos una vertical esté seleccionada
+      if (!checkboxStates.concatenated) {
+        showAlert("Por favor, selecciona al menos una vertical de negocio.", "warning");
+        return;
+      }
+
+      // Obtener los datos del formulario
+      const formData = {        apellido: document.getElementById("apellido").value.trim(),
+        nombre: document.getElementById("nombre").value.trim(),
+        localidad: document.getElementById("localidad").value.trim(),
+        provincia: document.getElementById("provincia").value.trim(),
+        pais: document.getElementById("pais").value.trim(),
+        telefono: document.getElementById("telefono").value.trim(),
+        mail: document.getElementById("mail").value.trim(),
+        verticales: document.getElementById("verticales").value.trim(),
+        comentarios: document.getElementById("comentarios").value.trim(),
+        montoEstimado: document.getElementById("montoEstimado").value.trim(),
+        presupuesto: document.getElementById("presupuesto").value.trim(),
+        operadorApp: operadorApp.value.trim(),
+        empresaOperador: empresaOperador.value.trim(),
+        comercialAsignado: document.getElementById("comercialAsignado").value,
+        telefonoComercial: document.getElementById("telefonoComercial").value,
+        mailComercial: document.getElementById("mailComercial").value,
+        empresa: document.getElementById("empresa").value,
+        bitrixId: document.getElementById("bitrixId").value,
+        evento: document.getElementById("evento").value.trim(),
+        concatenatedCheckboxes: checkboxStates.concatenated,
+        ...checkboxStates.data
+      };      // Validar el número de teléfono por país
+      const phoneValidation = validatePhoneByCountry(formData.telefono, formData.pais);
+      if (!phoneValidation.valid) {
+        showAlert(phoneValidation.message, "warning");
+        return;
+      }
+
+      showAlert("Procesando formulario...", "warning");      try {
+        if (navigator.onLine) {
+          // Intentar enviar directamente si hay conexión
+          const result = await new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(resolve)
+              .withFailureHandler(reject)
+              .processOfflineData([formData]);
+          });
+
+          if (result && result[0]) {
+            const resultData = result[0];
+            
+            if (resultData.success) {
+              // Formulario completamente exitoso
+              showAlert("Datos enviados correctamente.", "success");
+              stats.sent++;
+              updateStats();
+              resetForm();
+            } else {
+              // Envío parcialmente exitoso - preservar destinos exitosos para reintentos
+              console.log("Envío parcialmente exitoso. Destinos completados:", resultData.destinations);
+              
+              // Verificar si al menos un destino fue exitoso
+              const hasSuccessfulDestinations = resultData.destinations && 
+                (resultData.destinations.forms || resultData.destinations.bitrix || 
+                 resultData.destinations.wazzup || resultData.destinations.odoo);
+              
+              if (hasSuccessfulDestinations) {
+                // Actualizar formData con los estados de destinos exitosos
+                formData.destinations = resultData.destinations;
+                
+                // Contar destinos fallidos para mostrar mensaje apropiado
+                const failedDestinations = [];
+                if (!resultData.destinations.forms) failedDestinations.push('Google Forms');
+                if (!resultData.destinations.bitrix) failedDestinations.push('Bitrix24');
+                if (!resultData.destinations.wazzup) failedDestinations.push('WhatsApp');
+                if (!resultData.destinations.odoo) failedDestinations.push('Odoo');
+                
+                showAlert(`Enviado parcialmente. Se reintentarán: ${failedDestinations.join(', ')}`, "warning");
+              } else {
+                showAlert("Error al enviar a todos los destinos. Se reintentará completamente.", "warning");
+              }
+              
+              // Guardar con los estados de destinos preservados
+              const saved = await offlineStorage.saveForm(formData);
+              if (saved) {
+                resetForm();
+              } else {
+                throw new Error("Error al guardar el formulario offline");
+              }
+            }
+          } else {
+            throw new Error("Respuesta inválida del servidor");
+          }
+        } else {
+          // Guardar offline si no hay conexión
+          const saved = await offlineStorage.saveForm(formData);
+          if (saved) {
+            showAlert("Formulario guardado para envío posterior.", "success");
+            resetForm();
+          } else {
+            throw new Error("Error al guardar el formulario offline");
+          }
+        }
+      } catch (error) {
+        console.error('Error procesando formulario:', error);
+        showAlert(error.message || "Error al procesar el formulario", "warning");
+        
+        // Intentar guardar offline si falló el envío online
+        if (navigator.onLine) {
+          const saved = await offlineStorage.saveForm(formData);
+          if (saved) {
+            showAlert("Formulario guardado para reintento posterior.", "warning");
+            resetForm();
+          }
+        }
+      }
+    }
+
+    function resetForm() {
+      // Guardar valores actuales del operador
+      const currentOperador = operadorApp.value;
+      const currentEmpresa = empresaOperador.value;
+      
+      // Resetear el formulario
+      form.reset();
+      
+      // Restaurar valores guardados
+      operadorApp.value = currentOperador;
+      empresaOperador.value = currentEmpresa;
+    }
+
+    // Función para mostrar información detallada de los formularios pendientes
+    function showPendingFormsDetails() {
+      if (!offlineStorage.forms || offlineStorage.forms.length === 0) {
+        console.log("No hay formularios pendientes");
+        return;
+      }
+      
+      console.log(`=== FORMULARIOS PENDIENTES (${offlineStorage.forms.length}) ===`);
+      
+      offlineStorage.forms.forEach((form, index) => {
+        console.log(`\n--- Formulario ${index + 1} ---`);
+        console.log(`ID: ${form.id}`);
+        console.log(`Timestamp: ${form.timestamp}`);
+        console.log(`Nombre: ${form.nombre} ${form.apellido}`);
+        console.log(`Email: ${form.mail}`);
+        console.log(`Teléfono: ${form.telefono}`);
+        console.log(`Reintentos: ${form.retryCount || 0}`);
+        console.log(`Estado: ${form.status || 'pending'}`);
+        
+        if (form.destinations) {
+          console.log("Estados de destinos:");
+          console.log(`  • Google Forms: ${form.destinations.forms ? '✓' : '✗'}`);
+          console.log(`  • Bitrix24: ${form.destinations.bitrix ? '✓' : '✗'}`);
+          console.log(`  • WhatsApp: ${form.destinations.wazzup ? '✓' : '✗'}`);
+          console.log(`  • Odoo: ${form.destinations.odoo ? '✓' : '✗'}`);
+          
+          const pendingDestinations = [];
+          if (!form.destinations.forms) pendingDestinations.push('Google Forms');
+          if (!form.destinations.bitrix) pendingDestinations.push('Bitrix24');
+          if (!form.destinations.wazzup) pendingDestinations.push('WhatsApp');
+          if (!form.destinations.odoo) pendingDestinations.push('Odoo');
+          
+          if (pendingDestinations.length > 0) {
+            console.log(`  Pendientes: ${pendingDestinations.join(', ')}`);
+          } else {
+            console.log(`  ¡Todos los destinos completados!`);
+          }
+        }
+      });
+    }
+    
+    // Función para depurar un formulario específico
+    function debugForm(formId) {
+      const form = offlineStorage.forms.find(f => f.id === formId);
+      if (!form) {
+        console.log(`No se encontró formulario con ID: ${formId}`);
+        return;
+      }
+      
+      console.log("=== DEBUGGING FORMULARIO ===");
+      console.log(JSON.stringify(form, null, 2));
+      
+      return form;
+    }
+    
+    // Función para forzar el reintento de un formulario específico
+    async function retrySpecificForm(formId) {
+      const form = offlineStorage.forms.find(f => f.id === formId);
+      if (!form) {
+        showAlert(`No se encontró formulario con ID: ${formId}`, "warning");
+        return;
+      }
+      
+      console.log(`Forzando reintento del formulario ${formId}...`);
+      
+      try {
+        const result = await offlineStorage.sendForm(form);
+        console.log("Resultado del reintento:", result);
+        
+        if (result && result[0]) {
+          const formResult = result[0];
+          if (formResult.destinations) {
+            form.destinations = { ...form.destinations, ...formResult.destinations };
+          }
+          
+          const allComplete = form.destinations.forms && form.destinations.bitrix && 
+                            form.destinations.wazzup && form.destinations.odoo;
+          
+          if (allComplete) {
+            showAlert("Formulario completado exitosamente", "success");
+            const index = offlineStorage.forms.indexOf(form);
+            offlineStorage.forms.splice(index, 1);
+            stats.pending--;
+            stats.sent++;
+          } else {
+            showAlert("Reintento parcialmente exitoso", "warning");
+          }
+          
+          await offlineStorage.persistForms();
+          updateStats();
+        }
+      } catch (error) {
+        console.error("Error en reintento forzado:", error);
+        showAlert("Error en el reintento forzado", "warning");
+      }
+    }
+    
+    // Exponer funciones de debugging al ámbito global para uso en DevTools
+    window.debugFunctions = {
+      showPendingFormsDetails,
+      debugForm,
+      retrySpecificForm,
+      forceSync: () => offlineStorage.syncForms(),
+      clearPendingForms: () => {
+        if (confirm("¿Estás seguro de que quieres limpiar todos los formularios pendientes?")) {
+          offlineStorage.forms = [];
+          offlineStorage.persistForms();
+          stats.pending = 0;
+          updateStats();
+          showAlert("Formularios pendientes limpiados", "success");
+        }
+      }
+    };
+
+    // Función para validar teléfonos por país
+    function validatePhoneByCountry(telefono, pais) {
+      // Normalizar el teléfono (solo números)
+      const cleanPhone = telefono.replace(/\D/g, '');
+      
+      // Normalizar el nombre del país
+      const normalizedCountry = pais ? pais.trim().toLowerCase() : '';
+      
+      // Validaciones por país
+      switch (normalizedCountry) {
+        case 'argentina':
+          // Argentina: exactamente 10 caracteres, sin +549
+          if (cleanPhone.length !== 10) {
+            return {
+              valid: false,
+              message: `Teléfono para Argentina debe tener exactamente 10 dígitos (sin +549). Ingresaste ${cleanPhone.length} dígitos.`
+            };
+          }
+          // Verificar que no tenga prefijo +549
+          if (cleanPhone.startsWith('549')) {
+            return {
+              valid: false,
+              message: "Para Argentina, ingresa el número sin el prefijo +549."
+            };
+          }
+          break;
+          
+        case 'paraguay':
+          // Paraguay: mínimo 9 caracteres, sin +595
+          if (cleanPhone.length < 9) {
+            return {
+              valid: false,
+              message: `Teléfono para Paraguay debe tener mínimo 9 dígitos (sin +595). Ingresaste ${cleanPhone.length} dígitos.`
+            };
+          }
+          // Verificar que no tenga prefijo +595
+          if (cleanPhone.startsWith('595')) {
+            return {
+              valid: false,
+              message: "Para Paraguay, ingresa el número sin el prefijo +595."
+            };
+          }
+          break;
+          
+        case 'uruguay':
+          // Uruguay: mínimo 8 caracteres, sin +598
+          if (cleanPhone.length < 8) {
+            return {
+              valid: false,
+              message: `Teléfono para Uruguay debe tener mínimo 8 dígitos (sin +598). Ingresaste ${cleanPhone.length} dígitos.`
+            };
+          }
+          // Verificar que no tenga prefijo +598
+          if (cleanPhone.startsWith('598')) {
+            return {
+              valid: false,
+              message: "Para Uruguay, ingresa el número sin el prefijo +598."
+            };
+          }
+          break;
+          
+        default:
+          // Para otros países o cuando no se detecta país, usar validación genérica
+          if (cleanPhone.length < 8 || cleanPhone.length > 15) {
+            return {
+              valid: false,
+              message: `Número de teléfono debe tener entre 8 y 15 dígitos. Ingresaste ${cleanPhone.length} dígitos.`
+            };
+          }
+          break;
+      }
+      
+      return { valid: true };
+    }
+
+    // Función para mostrar validación en tiempo real del teléfono
+    function validatePhoneRealTime() {
+      const telefonoInput = document.getElementById("telefono");
+      const paisInput = document.getElementById("pais");
+      
+      if (telefonoInput && paisInput) {
+        const telefono = telefonoInput.value.trim();
+        const pais = paisInput.value.trim();
+        
+        if (telefono.length > 0) {
+          const validation = validatePhoneByCountry(telefono, pais);
+          
+          // Remover clases anteriores
+          telefonoInput.classList.remove('phone-valid', 'phone-invalid');
+          
+          if (validation.valid) {
+            telefonoInput.classList.add('phone-valid');
+            telefonoInput.title = "✓ Número válido";
+          } else {
+            telefonoInput.classList.add('phone-invalid');
+            telefonoInput.title = validation.message;
+          }
+        } else {
+          telefonoInput.classList.remove('phone-valid', 'phone-invalid');
+          telefonoInput.title = "";
+        }
+      }
+    }
+
+    // Función para actualizar el placeholder del teléfono según el país seleccionado
+    function updatePhonePlaceholder() {
+      const telefonoInput = document.getElementById("telefono");
+      const paisInput = document.getElementById("pais");
+      
+      if (telefonoInput && paisInput) {
+        const pais = paisInput.value.trim().toLowerCase();
+        
+        let placeholder = "";
+        switch (pais) {
+          case 'argentina':
+            placeholder = "Ej: 1123456789 (exactamente 10 dígitos, sin +549)";
+            break;
+          case 'paraguay':
+            placeholder = "Ej: 987654321 (mínimo 9 dígitos, sin +595)";
+            break;
+          case 'uruguay':
+            placeholder = "Ej: 98765432 (mínimo 8 dígitos, sin +598)";
+            break;
+          default:
+            placeholder = "Argentina: 10 dígitos | Paraguay: min 9 dígitos | Uruguay: min 8 dígitos";
+            break;
+        }
+        
+        telefonoInput.placeholder = placeholder;
+        
+        // También validar en tiempo real cuando cambia el país
+        validatePhoneRealTime();
+      }
+    }
+
+    // Llamar a updatePhonePlaceholder al cargar la página para establecer el placeholder correcto
+    document.addEventListener('DOMContentLoaded', () => {
+      updatePhonePlaceholder();
+    });
+  </script>
+</body>
+</html>
